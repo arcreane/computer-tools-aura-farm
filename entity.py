@@ -26,7 +26,12 @@ class Bullet(Entity):
     def __init__(self,vector:tuple):
         super().__init__('Bullet')
         self._vector = vector
-
+    def update(self,player):
+        lastUpdate = t.perf_counter()
+        if t.perf_counter() - lastUpdate > 0.2:
+            self._position[0] += self._vector[0]
+            self._position[1] += self._vector[1]
+            hitBoxCheck(self._hitboxRectangle,player)
 class Player(Entity):
     def __init__(self):
         super().__init__('Player')
