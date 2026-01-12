@@ -15,7 +15,7 @@ class Normal(Weapon):
         super().__init__("Normal")
 
     def giveVector(self):
-        return (1,0)
+        return tuple((1,0))
 
 class Spread(Weapon):
     def __init__(self):
@@ -24,5 +24,5 @@ class Spread(Weapon):
         Fx = 1
         Fy = r.randrange(0,11,1)
         Fy = Fy*0.1
-        F = (Fx,Fy)
+        F = tuple((Fx,Fy))
         return F

@@ -6,11 +6,14 @@ import random as r
 import math as m
 from FX import VFX
 import weapons as w
+shootTimer = t.perf_counter()
+moveTimer = t.perf_counter()
+lastUpdate = t.perf_counter()
 class Entity:
     def __init__(self,name,position=(0,0),devMode=False):
         self._name = name
         self._position = position
-        self._hitboxRectangle = pg.rect.Rect(0,0,0,0)
+        self._hitboxRectangle = pg.rect.Rect(5,3,5,5)
         self._spriteSheet = None
         self._spawned = False
         self._devMode = devMode
@@ -26,19 +29,21 @@ class Entity:
 
 class Bullet(Entity):
     def __init__(self,vector:tuple,devMode:bool = False):
-        super().__init__('Bullet',devMode)
+        super().__init__('Bullet',position=(0,0),devMode = devMode)
         self._vector = vector
         self._damage = 5
         self._hitboxRectangle = pg.rect.Rect(1,2,1,1)
+        self._lastUpdate = t.perf_counter()
+    def __str__(self):
+        return str([self._name,self._position,self._vector])
     def update(self,player):
-        lastUpdate = t.perf_counter()
-        if t.perf_counter() - lastUpdate > 0.2:
-            self._position[0] += self._vector[0]
-            self._position[1] += self._vector[1]
-            hitBoxCheck(self._hitboxRectangle,player)
+        if t.perf_counter() - self._lastUpdate > 1:
+            self._position = (self._position[0] + self._vector[0], self._position[1] + self._vector[1])
+            #hitBoxCheck(self._hitboxRectangle,player)
+            self._lastUpdate = t.perf_counter()
 
-        if self._devMode:
-            print(self._position)
+            if self._devMode:
+                print(f'{self._name} a la position {self._position}')
 class Player(Entity):
     def __init__(self,devMode:bool = False):
         super().__init__('Player',devMode = devMode)
@@ -51,37 +56,45 @@ class Player(Entity):
     def hit(self, damage):
         self._hp -= damage
 
-    def addBullet(self,bullet:Bullet):
+    def addBullet(self,bullet):
+        print(f"{bullet._vector} vecteur du bullet")
         self._bulletList.append(bullet)
 
     def move(self,event):
-        moveTimer = t.time()
+        global moveTimer
         if event.type == pygame.KEYDOWN:
             print(f'keydown')
-            if moveTimer - t.time() > 0.2:
-                if event.key == pygame.K_a:
+            print(f'{t.perf_counter() - moveTimer} temps cooldown move')
+            if t.perf_counter() - moveTimer > 0.2:
+                if event.key == pygame.K_LEFT:
                     print('player left')
-                    if self._position[0] >= 2:
-                        self._position[1] -= 2
+                    if self._position[1] >= 2:
+                        self._position = (self._position[0],self._position[1]-2)
+                    moveTimer = t.perf_counter()
                 elif event.key == pygame.K_RIGHT:
                     print('player right')
-                    self._position[1] += 2
+                    self._position = (self._position[0],self._position[1] + 2)
+                    moveTimer = t.perf_counter()
                 if event.key == pygame.K_UP:
                     print('player up')
-                    self._position[0] += 2
+                    self._position = (self._position[0] + 2, self._position[1])
+                    moveTimer = t.perf_counter()
                 elif event.key == pygame.K_DOWN:
                     print('player down')
                     if self._position[0] >= 2:
-                        self._position[0] -= 2
+                     self._position =  ( self._position[0] - 2, self._position[1])
+                    moveTimer = t.perf_counter()
         if self._devMode:
             print(f'{self._position} position joueur')
-    def shoot(self,event):
+    def shoot(self):
+        global shootTimer
         print('player shoot OK')
-        shootTimer = t.perf_counter()
         givenVector = self._selectedWeapon.giveVector()
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and shootTimer - t.perf_counter() > 0.2:
-            print(f'{self._bulletList} new bullet')
-            self._bulletList.append(Bullet(givenVector))
+        print(f'{t.perf_counter() - shootTimer} temps cooldown')
+        if t.perf_counter() - shootTimer > 0.2:
+            self.addBullet(Bullet((0,1),True))
+            print(f'{str(self._bulletList)} new bullet')
+            shootTimer = t.perf_counter()
 
 class Enemy(Entity):
     def __init__(self,name,hp,devMode=False):
@@ -99,7 +112,10 @@ def hitBoxCheck(rectangle1,rectangle2):
 
 def test():
     pygame.init()
-    screen = pygame.display.set_mode((800,600))
+    pygame.display.init()
+    screen = pygame.display.set_mode((1000,700))
+    clock = pygame.time.Clock()
+    clock.tick(60)
     mobList = []
     run = True
     player = Player(devMode=True)
@@ -110,7 +126,9 @@ def test():
         for event in events:
             if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 player.move(event)
-                player.shoot(event)
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    print(player._bulletList)
+                    player.shoot()
         for bullets in player._bulletList:
             bullets.update(player)
 
