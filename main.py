@@ -1,7 +1,5 @@
-import pygame,pygame_widgets, sys
+import pygame, sys
 from pygame.locals import *
-from pygame_widgets.slider import Slider
-from pygame_widgets.textbox import TextBox
 
 buttonTexture =  pygame.image.load('button.jpg')                        #loads the different placeholder textures
 cat = pygame.image.load('cat.png')
@@ -40,23 +38,23 @@ gamePlayersprite = [playerTexture,playerCoords,playerSize]
 '''
 def load(pageinfo,screen):                                              #load function to draw the different images, texts, buttons and widgets on the screen
     pygame.Surface.fill(page,(224,224,224))
-    for item in pageinfo['button']:
-        item.draw(page)
     for item in pageinfo['text']:
         screen.blit(font.render(item[0],item[1],item[2]),item[3])
     for item in pageinfo['image']:
         screen.blit(pygame.transform.scale(item[0],(item[3],item[4])), (item[1], item[2]))
-    if pageinfo['name'] == 'settings' or pageinfo['name'] == 'keybinds':
-        pass
+    for item in pageinfo['button']:
+        item.draw(page)
 
 mainmenuText1 = ['main menu', True, (0,0,0),(0,0)]                      #all the different items that show up on all pages, saved as variables so the game page info is more readable
 mainmenuText2 = ['aura farm industries present: yet another space attacks clone', True, (0,0,0),(0,550)]
 mainmenuText3 = ['pretend this is the games logo', True, (0,0,0),(250,60)]
-mainmenuStartbutton = Button(100,400,200,100,'levels',buttonTexture)
-mainmenuSettingsbutton = Button(400,400,200,100,'settings',buttonTexture)
-mainmenuCatimage = [car,250,100,400,200]
 mainmenuText4 = ['start game', True, (0,0,0),(100,360)]
 mainmenuText5 = ['settings', True, (0,0,0),(400,360)]
+mainmenuText6 = ['exit game', True, (0,0,0),(700,360)]
+mainmenuStartbutton = Button(100,400,200,100,'levels',buttonTexture)
+mainmenuSettingsbutton = Button(400,400,200,100,'settings',buttonTexture)
+mainmenuExitbutton = Button(700,400,200,100,'exit',buttonTexture)
+mainmenuCatimage = [car,250,100,400,200]
 
 settingsKeybindsbutton = Button(200,500,200,100,'keybinds',buttonTexture)
 settingsBackbutton = Button(600,500,200,100,'mainmenu',buttonTexture)
@@ -66,15 +64,26 @@ settingsText3 = ['return', True, (0,0,0),(600,460)]
 
 keybindsReturnbutton = Button(600,500,200,100,'settings',buttonTexture)
 keybindsReturntext = ['return', True, (0,0,0),(600,460)]
+keybindsText = ['keybinds', True, (0,0,0),(0,0)]
+
+levelsPlaybutton = Button(200,500,200,100,'game',buttonTexture)
+levelsReturnbutton = Button(600,500,200,100,'mainmenu',buttonTexture)
+levelsPlaytext = ['click to play', True, (0,0,0),(200,460)]
+levelsReturntext = ['return', True, (0,0,0),(600,460)]
+levelsText = ['levels', True, (0,0,0),(0,0)]
+
+gameReturnbutton = Button(800,560,200,100,'levels',buttonTexture)
+gameReturntext = ['return', True, (255,255,255),(800,560)]
+gameBackgroundimage = [stars,0,0,1000,700]
+gamePlayertexture = [cat,450,550,100,100]
 
 
                                                                         #the game pages info given as a dict
 mainmenu = {                                                            #the different items that show up are used as keys, and their associated value being a list containing the stuff that show up on said page
     'name' : 'mainmenu',
-    'text' : [mainmenuText1,mainmenuText2,mainmenuText3,mainmenuText4,mainmenuText5],
+    'text' : [mainmenuText1,mainmenuText2,mainmenuText3,mainmenuText4,mainmenuText5,mainmenuText6],
     'image' : [mainmenuCatimage],
-    'button' : [mainmenuStartbutton,mainmenuSettingsbutton],
-    'widget' : [False]
+    'button' : [mainmenuStartbutton,mainmenuSettingsbutton,mainmenuExitbutton],
 }
 
 settings = {
@@ -82,32 +91,29 @@ settings = {
     'text' : [settingsText1,settingsText2,settingsText3],
     'image' : [],
     'button' : [settingsKeybindsbutton,settingsBackbutton],
-    'widget': [True]
 }
 
 keybinds = {
     'name': 'keybinds',
-    'text' : [keybindsReturntext],
+    'text' : [keybindsReturntext,keybindsText],
     'image' : [],
     'button' : [keybindsReturnbutton],
-    'widget': [True]
 }
 
 levels = {
     'name': 'levels',
-    'text' : [],
+    'text' : [levelsPlaytext,levelsReturntext,levelsText],
     'image' : [],
-    'button' : [],
-    'widget': [False]
+    'button' : [levelsPlaybutton,levelsReturnbutton],
 }
 
 game = {
     'name': 'game',
-    'text' : [],
-    'image' : [stars],
-    'button' : [],
-    'widget': [False]
+    'text' : [gameReturntext],
+    'image' : [gameBackgroundimage,gamePlayertexture],
+    'button' : [gameReturnbutton],
 }
+
 def addresscheck(button):                                               #function that checks the address of the button, and loads the page associated to said address
     global loadedpage
     if button.address == 'mainmenu':
@@ -125,6 +131,9 @@ def addresscheck(button):                                               #functio
     if button.address == 'game':
         loadedpage = game
         load(game,page)
+    if button.address == 'exit':
+        pygame.quit()
+        sys.exit()
 
 load(mainmenu,page)                                                     #loads the main menu (duh)
 global loadedpage
@@ -142,7 +151,4 @@ while True:                                                             # main g
             for item in loadedpage['button']:
                 if mouseposition[0] >= item.x and mouseposition[0] <= (item.x + item.width) and mouseposition[1] >= item.y and mouseposition[1] <= (item.y + item.height):
                     addresscheck(item)
-            if loadedpage['widget'][0] == True:
-                pygame_widgets.update(events)
-
         pygame.display.update()
