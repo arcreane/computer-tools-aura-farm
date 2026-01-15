@@ -1,12 +1,14 @@
+import pygame
+from pygame.locals import*
+import json
 from save_manager import SaveManager
 save_manager = SaveManager()
 
-game_data = {                     #Données du jeu?
-    "score": 100,     #exemples de données de jeu
-    "level": 2,
+game_data = {                                                 #Data of the game
+    "level": {1},
     "position": {"x","y"},
-    "ship_upgrades": ["shield", "..."] }
+}
 
-save_manager.save_game("save1.json", game_data) #Sauvegarder les données
+save_manager.save_game("save1.json", game_data)                #Save data
 
-print("Sauvegardes disponibles :", save_manager.list_saves()) #Lister les sauvegardes
+print("Disponible savingd :", save_manager.list_saves())       #List of saves
