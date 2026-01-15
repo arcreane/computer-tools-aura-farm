@@ -1,6 +1,6 @@
 import pygame
 import time
-
+import random as r
 pygame.init()
 pygame.mixer.init(44100, -16, 2, 2048)
 
@@ -15,7 +15,5 @@ dmg_taken_sound = pygame.mixer.Sound("dmg_taken.wav")
 # Wait for the sound to finish playing (for testing only, game will loop and won't need it)
 # time.sleep(pew.get_length())  
 
-pygame.mixer.music.play(-1)  # Loop forever
-
-while True:
-    pygame.time.Clock().tick(10)
+def musicInit():
+    pygame.mixer.music.play(-1)  # Loop forever
