@@ -1,0 +1,19 @@
+import pygame
+import time
+import random as r
+pygame.init()
+pygame.mixer.init(44100, -16, 2, 2048)
+
+pygame.mixer.music.load(r"FX/assets/SFX/bgm1.wav")
+
+#button_click_sound = pygame.mixer.Sound(r"assets/SFX/button_click.wav")
+#pew_sound = pygame.mixer.Sound(r"assets/SFX/pew.wav")
+#dmg_taken_sound = pygame.mixer.Sound(r"assets/SFX/dmg_taken.wav")
+
+# pew_sound.play()
+
+# Wait for the sound to finish playing (for testing only, game will loop and won't need it)
+# time.sleep(pew.get_length())  
+
+def musicInit():
+    pygame.mixer.music.play(-1)  # Loop forever

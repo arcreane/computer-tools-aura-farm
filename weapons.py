@@ -15,7 +15,7 @@ class Normal(Weapon):
         super().__init__("Normal")
 
     def giveVector(self):
-        return tuple((1,0))
+        return tuple((10,0))
 
 class Spread(Weapon):
     def __init__(self):

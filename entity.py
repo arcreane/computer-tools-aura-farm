@@ -4,13 +4,15 @@ import pygame as pg
 import time as t
 import random as r
 import math as m
-from FX import VFX
+from FX import SFX as sfx
 import weapons as w
+
 shootTimer = t.perf_counter()
 moveTimer = t.perf_counter()
 lastUpdate = t.perf_counter()
 class Entity:
     def __init__(self,name,position=(0,0),devMode=False):
+        self.color = (255,0,0)
         self._name = name
         self._position = position
         self._hitboxRectangle = pg.rect.Rect(5,3,5,5)
@@ -23,14 +25,16 @@ class Entity:
     def despawn(self):
         self._spawned = False
 
-    def draw(self):
+    def draw(self,screen):
         if self._spawned:
-            VFX.afficher(self)
+            rect = pg.rect.Rect((self._position[0],self._position[1]),(50,50))
+            pygame.draw.rect(screen,self.color,rect)
 
 class Bullet(Entity):
-    def __init__(self,vector:tuple,devMode:bool = False):
-        super().__init__('Bullet',position=(0,0),devMode = devMode)
+    def __init__(self,vector:tuple,devMode:bool = False,position = (0,0)):
+        super().__init__('Bullet',position=position,devMode = devMode)
         self._vector = vector
+        self.color = (0,255,0)
         self._damage = 5
         self._hitboxRectangle = pg.rect.Rect(1,2,1,1)
         self._lastUpdate = t.perf_counter()
@@ -38,12 +42,18 @@ class Bullet(Entity):
         return str([self._name,self._position,self._vector])
     def update(self,player):
         if t.perf_counter() - self._lastUpdate > 1:
-            self._position = (self._position[0] + self._vector[0], self._position[1] + self._vector[1])
+            self._position = (self._position[0] + self._vector[0], self._position[1] - self._vector[1])
             #hitBoxCheck(self._hitboxRectangle,player)
             self._lastUpdate = t.perf_counter()
-
+            if self._position[0] < 0 or self._position[1] < 0:
+                self._spawned = False
             if self._devMode:
                 print(f'{self._name} a la position {self._position}')
+
+    def draw(self,screen):
+        if self._spawned:
+            rect = pg.rect.Rect((self._position[0],self._position[1]),(10,10))
+            pygame.draw.rect(screen,self.color,rect)
 class Player(Entity):
     def __init__(self,devMode:bool = False):
         super().__init__('Player',devMode = devMode)
@@ -66,23 +76,23 @@ class Player(Entity):
             print(f'keydown')
             print(f'{t.perf_counter() - moveTimer} temps cooldown move')
             if t.perf_counter() - moveTimer > 0.2:
-                if event.key == pygame.K_LEFT:
+                if event.key == pygame.K_UP:
                     print('player left')
                     if self._position[1] >= 2:
-                        self._position = (self._position[0],self._position[1]-2)
-                    moveTimer = t.perf_counter()
-                elif event.key == pygame.K_RIGHT:
-                    print('player right')
-                    self._position = (self._position[0],self._position[1] + 2)
-                    moveTimer = t.perf_counter()
-                if event.key == pygame.K_UP:
-                    print('player up')
-                    self._position = (self._position[0] + 2, self._position[1])
+                        self._position = (self._position[0],self._position[1]-20)
                     moveTimer = t.perf_counter()
                 elif event.key == pygame.K_DOWN:
+                    print('player right')
+                    self._position = (self._position[0],self._position[1] + 20)
+                    moveTimer = t.perf_counter()
+                if event.key == pygame.K_RIGHT:
+                    print('player up')
+                    self._position = (self._position[0] + 20, self._position[1])
+                    moveTimer = t.perf_counter()
+                elif event.key == pygame.K_LEFT:
                     print('player down')
                     if self._position[0] >= 2:
-                     self._position =  ( self._position[0] - 2, self._position[1])
+                     self._position =  ( self._position[0] - 20, self._position[1])
                     moveTimer = t.perf_counter()
         if self._devMode:
             print(f'{self._position} position joueur')
@@ -91,11 +101,12 @@ class Player(Entity):
         print('player shoot OK')
         givenVector = self._selectedWeapon.giveVector()
         print(f'{t.perf_counter() - shootTimer} temps cooldown')
-        if t.perf_counter() - shootTimer > 0.2:
-            self.addBullet(Bullet((0,1),True))
+        if t.perf_counter() - shootTimer > 2:
+            self.addBullet(Bullet((0,10),True,position=(self._position[0]+25,self._position[1])))
             print(f'{str(self._bulletList)} new bullet')
             shootTimer = t.perf_counter()
-
+    def getBullets(self):
+        return self._bulletList
 class Enemy(Entity):
     def __init__(self,name,hp,devMode=False):
         super().__init__(name,devMode = devMode)
@@ -111,25 +122,37 @@ def hitBoxCheck(rectangle1,rectangle2):
         return False
 
 def test():
-    pygame.init()
-    pygame.display.init()
-    screen = pygame.display.set_mode((1000,700))
-    clock = pygame.time.Clock()
-    clock.tick(60)
-    mobList = []
-    run = True
-    player = Player(devMode=True)
-    mob1 = Enemy("mob1", 100, devMode=True)
-    mobList.append(mob1)
-    while run:
-        events = pygame.event.get()
-        for event in events:
-            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
-                player.move(event)
-                if event.type == pg.MOUSEBUTTONDOWN:
-                    print(player._bulletList)
-                    player.shoot()
-        for bullets in player._bulletList:
-            bullets.update(player)
-
+    if __name__ == "entity":
+        pygame.init()
+        pygame.display.init()
+        screen = pg.display.set_mode((1000,700))
+        clock = pygame.time.Clock()
+        clock.tick(60)
+        mobList = []
+        run = True
+        player = Player(devMode=True)
+        mob1 = Enemy("mob1", 100, devMode=True)
+        mobList.append(mob1)
+        player.spawn()
+        sfx.musicInit()
+        while run:
+            screen.fill((0,0,0))
+            player.draw(screen)
+            for bullet in player.getBullets():
+                bullet.spawn()
+            for bullets in player.getBullets():
+                bullets.draw(screen)
+            pg.display.update()
+            events = pygame.event.get()
+            for event in events:
+                if event.type == pg.QUIT:
+                    quit()
+                if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                    player.move(event)
+                    if event.type == pg.MOUSEBUTTONDOWN:
+                        print(player._bulletList)
+                        player.shoot()
+            for bullets in player._bulletList:
+                bullets.update(player)
+__name__ = "entity"
 test()
